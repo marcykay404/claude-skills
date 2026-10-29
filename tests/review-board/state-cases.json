@@ -1,0 +1,25 @@
+{
+  "_about": "Item-state cases shared by test_scripts.py (round_report.py) and test_page.js (the page). Both must give the expected state. Times are minutes past 08:00 on a fixed day.",
+  "cases": [
+    { "name": "nothing yet", "expect": "your_turn" },
+    { "name": "accepted recommendation", "responses": { "answer": "accept", "at": 1 }, "expect": "with_claude" },
+    { "name": "picked an option", "responses": { "answer": "b", "at": 1 }, "expect": "with_claude" },
+    { "name": "unknown answer value", "responses": { "answer": "zzz", "at": 1 }, "expect": "with_claude" },
+    { "name": "empty multi answer counts as unanswered", "responses": { "answer": [], "at": 1 }, "expect": "your_turn" },
+    { "name": "comment only", "messages": [{ "by": "owner", "at": 1 }], "expect": "with_claude" },
+    { "name": "decide later parks it", "responses": { "answer": "later", "at": 1 }, "expect": "parked" },
+    { "name": "decide later, then a comment", "responses": { "answer": "later", "at": 1 }, "messages": [{ "by": "owner", "at": 2 }], "expect": "with_claude" },
+    { "name": "decided", "responses": { "answer": "accept", "at": 1 }, "decisions": { "at": 5, "seen": 1 }, "expect": "decided" },
+    { "name": "decision without seen falls back to its at", "responses": { "answer": "accept", "at": 1 }, "decisions": { "at": 5 }, "expect": "decided" },
+    { "name": "parked decision", "responses": { "answer": "later", "at": 1 }, "decisions": { "at": 5, "seen": 1, "parked": true }, "expect": "parked" },
+    { "name": "answer changed while Claude was working is not hidden", "responses": { "answer": "b", "at": 3 }, "decisions": { "at": 5, "seen": 1 }, "expect": "with_claude" },
+    { "name": "comment after a decision reopens it", "responses": { "answer": "accept", "at": 1 }, "decisions": { "at": 5, "seen": 1 }, "messages": [{ "by": "owner", "at": 6 }], "expect": "with_claude" },
+    { "name": "comment on a parked decision reaches Claude", "responses": { "answer": "later", "at": 1 }, "decisions": { "at": 5, "seen": 1, "parked": true }, "messages": [{ "by": "owner", "at": 6 }], "expect": "with_claude" },
+    { "name": "follow-up question pending", "responses": { "answer": "discuss", "at": 1 }, "messages": [{ "by": "owner", "at": 1 }, { "by": "claude", "at": 5, "seen": 1, "asks": true }], "expect": "your_turn" },
+    { "name": "follow-up answered", "responses": { "answer": "discuss", "at": 1 }, "messages": [{ "by": "owner", "at": 1 }, { "by": "claude", "at": 5, "seen": 1, "asks": true }, { "by": "owner", "at": 6 }], "expect": "with_claude" },
+    { "name": "follow-up overtaken by an answer changed mid-round", "responses": { "answer": "b", "at": 3 }, "messages": [{ "by": "claude", "at": 5, "seen": 1, "asks": true }], "expect": "with_claude" },
+    { "name": "follow-up without seen falls back to its at", "responses": { "answer": "discuss", "at": 1 }, "messages": [{ "by": "claude", "at": 5, "asks": true }], "expect": "your_turn" },
+    { "name": "plain Claude reply doesn't change the state", "responses": { "answer": "b", "at": 1 }, "messages": [{ "by": "claude", "at": 5 }], "expect": "with_claude" },
+    { "name": "follow-up on a decided item", "responses": { "answer": "accept", "at": 1 }, "decisions": { "at": 5, "seen": 1 }, "messages": [{ "by": "claude", "at": 6, "seen": 1, "asks": true }], "expect": "your_turn" }
+  ]
+}

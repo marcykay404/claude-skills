@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+# claude plugin eval output
+skills/*/evals/results/

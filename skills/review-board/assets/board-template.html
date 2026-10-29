@@ -1,0 +1,761 @@
+<title>__BOARD_TITLE__</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: a review docket. One-row sticky bar with state tabs, collapsible sections, collapsed item rows that expand in place. */
+:root {
+  --bg: #f6f7f9; --surface: #ffffff; --fg: #1a2230; --muted: #5a6577; --line: #dde2ea;
+  --accent: #2b4c7e; --accent-soft: #e6ecf6;
+  --turn: #9a5b00; --turn-soft: #fcefd9;
+  --with: #5a6577; --with-soft: #eceff4;
+  --done: #166946; --done-soft: #e2f3ea;
+  --park: #5c6270; --park-soft: #eef0f3;
+  --danger: #a33a3a; --danger-soft: #f8e6e6;
+  --claude: #4b3f99; --claude-soft: #f0eefb;
+  --font-display: "Source Serif 4", Georgia, "Times New Roman", serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --bar-h: 64px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #12161d; --surface: #191e27; --fg: #e4e8ef; --muted: #9aa4b5; --line: #2b323e;
+    --accent: #8fb0e6; --accent-soft: #1f2a3c;
+    --turn: #f0b45a; --turn-soft: #3a2a12; --with: #a7b0bf; --with-soft: #252b35;
+    --done: #6fcf9f; --done-soft: #173327; --park: #8d94a2; --park-soft: #21262f;
+    --danger: #ee8f8f; --danger-soft: #3b1f22; --claude: #b9adf5; --claude-soft: #231f3a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #12161d; --surface: #191e27; --fg: #e4e8ef; --muted: #9aa4b5; --line: #2b323e;
+  --accent: #8fb0e6; --accent-soft: #1f2a3c;
+  --turn: #f0b45a; --turn-soft: #3a2a12; --with: #a7b0bf; --with-soft: #252b35;
+  --done: #6fcf9f; --done-soft: #173327; --park: #8d94a2; --park-soft: #21262f;
+  --danger: #ee8f8f; --danger-soft: #3b1f22; --claude: #b9adf5; --claude-soft: #231f3a;
+  color-scheme: dark;
+}
+[hidden] { display: none !important; }
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); font-size: 15px; line-height: 1.55; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--surface); }
+.wrap { max-width: 1080px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1, h2, h3 { margin: 0; text-wrap: balance; }
+h1 { font-family: var(--font-display); font-weight: 600; font-size: 1.9rem; line-height: 1.15; }
+h2 { font-family: var(--font-display); font-weight: 600; font-size: 1.2rem; }
+h3 { font-size: 1rem; font-weight: 600; line-height: 1.35; }
+.label { font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); }
+.small { font-size: 0.82rem; color: var(--muted); }
+button { font: inherit; color: inherit; }
+button:focus-visible, textarea:focus-visible, select:focus-visible, a:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btn { min-height: 44px; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; }
+.btn:hover { border-color: var(--muted); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--surface); }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.linkbtn { background: none; border: 0; padding: 0; color: var(--accent); cursor: pointer; text-decoration: underline; min-height: 32px; }
+
+/* Header */
+header.top { padding-block: 28px 16px; display: grid; gap: 10px; }
+.status-line { font-size: 1rem; }
+.status-line b { color: var(--turn); }
+.header-actions { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; }
+details.how { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; }
+details.how summary { cursor: pointer; padding: 10px 14px; min-height: 44px; display: flex; align-items: center; }
+details.how .how-body { padding: 0 14px 12px; max-width: 70ch; color: var(--muted); }
+.general { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; display: grid; gap: 10px; }
+.banner { border: 1px solid var(--danger); background: var(--danger-soft); border-radius: 8px; padding: 10px 14px; font-size: 0.9rem; }
+
+/* Since last visit */
+.since { background: var(--claude-soft); border-radius: 8px; padding: 10px 14px; display: grid; gap: 6px; }
+.since ul { margin: 0; padding: 0; list-style: none; display: flex; flex-wrap: wrap; gap: 6px; }
+.since li button.more { border-style: dashed; color: var(--claude); }
+.since li button { min-height: 36px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); padding: 4px 12px; cursor: pointer; font-size: 0.85rem; }
+.since-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.since .label { color: var(--claude); }
+
+/* Sticky bar */
+.bar { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--surface); border-block: 1px solid var(--line); }
+.bar .wrap { display: flex; align-items: center; gap: 12px; padding-block: 8px; }
+.tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; flex: 1 1 auto; min-width: 0; }
+.tabs::-webkit-scrollbar { display: none; }
+.tabs.more { -webkit-mask-image: linear-gradient(to right, #000 80%, transparent); mask-image: linear-gradient(to right, #000 80%, transparent); }
+.tab { flex: none; min-height: 44px; padding: 6px 12px; border-radius: 8px; border: 1px solid transparent; background: transparent; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-size: 0.9rem; }
+.tab[aria-pressed="true"] { background: var(--fg); color: var(--bg); }
+.tab .dot { width: 9px; height: 9px; border-radius: 50%; }
+.tab .n { font-family: var(--font-mono); font-variant-numeric: tabular-nums; font-size: 0.8rem; }
+.dot.your_turn { background: var(--turn); } .dot.with_claude { background: var(--with); } .dot.decided { background: var(--done); } .dot.parked { background: var(--park); }
+.meter { height: 4px; display: flex; background: var(--line); }
+.meter span { height: 100%; transition: width .3s; }
+.meter .your_turn { background: var(--turn); } .meter .with_claude { background: var(--with); } .meter .decided { background: var(--done); } .meter .parked { background: var(--park); }
+.list-col { min-width: 0; }
+.section-select { display: none; width: 100%; min-height: 44px; margin-bottom: 12px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); padding: 0 8px; font: inherit; }
+.conn { font-size: 0.8rem; color: var(--danger); white-space: nowrap; }
+
+/* Main */
+.main { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 28px; padding-block: 20px 64px; }
+.toc { position: sticky; top: calc(env(safe-area-inset-top, 0px) + var(--bar-h) + 12px); align-self: start; display: grid; gap: 2px; font-size: 0.88rem; }
+.toc a { text-decoration: none; color: var(--fg); padding: 6px 8px; border-radius: 6px; display: flex; justify-content: space-between; gap: 8px; }
+.toc a:hover { background: var(--accent-soft); }
+.toc .tc { font-family: var(--font-mono); font-size: 0.75rem; color: var(--turn); }
+@media (max-width: 820px) { .main { grid-template-columns: minmax(0, 1fr); } .toc { display: none; } .section-select { display: block; } }
+@media (max-width: 600px) { .tab { padding: 6px 8px; gap: 5px; font-size: 0.85rem; } .row { grid-template-columns: auto minmax(0, 1fr); } .row .chips { grid-column: 2; justify-content: flex-start; } .row .rsum { grid-column: 2; } }
+.empty { color: var(--muted); padding: 24px 0; }
+
+section.group { margin-bottom: 20px; scroll-margin-top: calc(var(--bar-h) + 16px); }
+.group-head { width: 100%; display: flex; align-items: baseline; gap: 10px; padding: 10px 0; border: 0; border-bottom: 2px solid var(--fg); background: none; cursor: pointer; text-align: left; }
+.gh { margin: 0; font: inherit; }
+.group-head .gt { font-family: var(--font-display); font-weight: 600; font-size: 1.2rem; }
+.group-head .gk { font-family: var(--font-mono); color: var(--accent); }
+.group-head .gsum { margin-left: auto; font-size: 0.82rem; color: var(--muted); white-space: nowrap; }
+.group-head .chev { transition: transform .2s; color: var(--muted); }
+.group-head[aria-expanded="false"] .chev { transform: rotate(-90deg); }
+.group-blurb { margin: 6px 0 0; color: var(--muted); font-size: 0.88rem; }
+
+/* Item */
+.item { border-bottom: 1px solid var(--line); scroll-margin-top: calc(var(--bar-h) + 16px); }
+.row { width: 100%; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 4px 12px; align-items: baseline; padding: 12px 0; background: none; border: 0; text-align: left; cursor: pointer; }
+.row .iid { font-family: var(--font-mono); font-size: 0.8rem; color: var(--muted); min-width: 2.4em; }
+.row .rtitle { font-weight: 600; }
+.row .rsum { grid-column: 2 / 4; color: var(--muted); font-size: 0.9rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.row .rsum.decision { color: var(--fg); }
+.row .rsum.ask { color: var(--turn); }
+.chips { display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; }
+.chip { font-size: 0.7rem; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
+.chip.your_turn { background: var(--turn-soft); color: var(--turn); } .chip.with_claude { background: var(--with-soft); color: var(--with); }
+.chip.decided { background: var(--done-soft); color: var(--done); } .chip.parked { background: var(--park-soft); color: var(--park); }
+.chip.blocker { background: var(--danger-soft); color: var(--danger); } .chip.mark { background: var(--accent-soft); color: var(--accent); }
+.body { display: grid; gap: 14px; padding: 0 0 20px; max-width: 72ch; }
+@media (min-width: 821px) { .body { padding-left: calc(2.4em + 12px); } }
+.decision-box { border: 1px solid var(--done); background: var(--done-soft); border-radius: 8px; padding: 10px 14px; display: grid; gap: 4px; }
+.decision-box .label { color: var(--done); }
+.decision-box .linkbtn { justify-self: start; }
+.issue { margin: 0; }
+.issue, .rec p, .rtitle, .rsum, .dtext, .group-blurb { overflow-wrap: anywhere; }
+.body > * { min-width: 0; }
+.decision-box.old { border-style: dashed; background: transparent; }
+.decision-box.old .label { color: var(--muted); }
+.rec { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 10px 14px; }
+.rec p { margin: 2px 0 0; }
+.answers { display: grid; gap: 8px; }
+.ans-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.ans { min-height: 44px; padding: 8px 14px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); cursor: pointer; text-align: left; display: inline-flex; align-items: center; gap: 8px; }
+.ans .box { width: 16px; height: 16px; border: 2px solid var(--muted); border-radius: 50%; flex: none; }
+.ans.multi .box { border-radius: 3px; }
+.ans[aria-checked="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.ans[aria-checked="true"] .box { border-color: var(--accent); background: var(--accent); box-shadow: inset 0 0 0 3px var(--accent-soft); }
+.ans .rectag { font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--done); }
+.ans.aside { color: var(--muted); }
+.prompt-note { font-size: 0.85rem; color: var(--turn); background: var(--turn-soft); border-radius: 8px; padding: 8px 12px; }
+.ans-foot { display: flex; gap: 12px; align-items: center; min-height: 24px; }
+.save-status { font-size: 0.8rem; color: var(--muted); }
+.save-status.err { color: var(--danger); }
+.thread { display: grid; gap: 8px; }
+.msg { border-radius: 8px; padding: 8px 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.msg.owner { background: var(--surface); border: 1px solid var(--line); }
+.msg.claude { background: var(--claude-soft); }
+.msg .who { display: block; font-size: 0.72rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 2px; }
+.msg.claude .who { color: var(--claude); }
+.quick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.composer { display: grid; gap: 6px; }
+.composer textarea { font: inherit; font-size: 0.95rem; width: 100%; min-height: 72px; resize: vertical; padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); field-sizing: content; max-height: 50vh; }
+.composer .crow { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.meta { font-size: 0.8rem; color: var(--muted); display: grid; gap: 2px; }
+@media (prefers-reduced-motion: reduce) { .meter span, .group-head .chev { transition: none; } }
+</style>
+
+<header class="wrap top">
+  <h1 id="board-title"></h1>
+  <p class="small" id="board-subtitle" hidden></p>
+  <div class="status-line" id="status-line" aria-live="polite"></div>
+  <div class="banner" id="banner" hidden></div>
+  <div class="since" id="since" hidden>
+    <div class="since-head"><span class="label">Since your last visit</span><button type="button" class="linkbtn" id="since-dismiss">Dismiss</button></div>
+    <ul id="since-list"></ul>
+  </div>
+  <div class="header-actions">
+    <details class="how" id="how">
+      <summary>How this works</summary>
+      <div class="how-body" id="how-body"></div>
+    </details>
+    <button type="button" class="linkbtn" id="general-toggle" aria-expanded="false" aria-controls="general">Anything else?</button>
+  </div>
+  <div class="general" id="general" hidden></div>
+</header>
+
+<div class="bar" id="bar">
+  <div class="wrap">
+    <div class="tabs" id="tabs" role="group" aria-label="Show items"></div>
+    <span class="conn" id="conn" hidden></span>
+  </div>
+  <div class="meter" aria-hidden="true" id="meter"></div>
+</div>
+<div class="sr-only" aria-live="polite" id="announce" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)"></div>
+
+<div class="wrap main">
+  <nav class="toc" id="toc" aria-label="Sections"></nav>
+  <div class="list-col">
+    <select class="section-select" id="section-select" aria-label="Jump to section"></select>
+    <div id="list"></div>
+  </div>
+</div>
+
+<script type="application/json" id="board-data">__BOARD_DATA__</script>
+<script>
+(() => {
+const BOARD = JSON.parse(document.getElementById("board-data").textContent);
+const ITEMS = BOARD.items, GROUPS = BOARD.groups;
+const byId = Object.fromEntries(ITEMS.map(i => [i.id, i]));
+const GENERAL = "_general";
+const STATES = [
+  { k: "your_turn", l: "Your turn" },
+  { k: "with_claude", l: "With Claude" },
+  { k: "decided", l: "Decided" },
+  { k: "parked", l: "Parked" },
+];
+const SLABEL = Object.fromEntries(STATES.map(s => [s.k, s.l]));
+const SEV = { blocker: "Blocker", important: "Important", detail: "Detail" };
+const FIXED = [
+  { k: "accept", l: "Accept recommendation" },
+  { k: "change", l: "Something else…", needsText: true },
+  { k: "discuss", l: "I have a question…", needsText: true },
+  { k: "later", l: "Decide later" },
+];
+
+const store = { responses: {}, decisions: {}, messages: [] };
+const drafts = {}, composerMode = {}, expanded = new Set(), sigs = {};
+// Section open/closed state, remembered per tab. Only the All tab starts with finished sections collapsed;
+// filtered tabs show their sections open, so the items the tab is for are visible.
+const sectionOpenByTab = {}, finishedAtLoad = {};
+const tabKey = () => tab || "all";
+const isSectionOpen = k => (sectionOpenByTab[tabKey()] || {})[k] ?? (tabKey() === "all" ? !finishedAtLoad[k] : true);
+const setSectionOpen = (k, v) => { (sectionOpenByTab[tabKey()] = sectionOpenByTab[tabKey()] || {})[k] = v; };
+const sticky = new Set(); // items touched under the current tab stay visible until the tab changes
+let db = null, canWrite = true, tab = null, ready = false, live = false, userPickedTab = false, connState = "connecting";
+const LSKEY = "review-board:last-visit:" + (BOARD.key || BOARD.title);
+let prevVisit = "";
+try { prevVisit = localStorage.getItem(LSKEY) || ""; } catch (_) {}
+
+const $ = (s, el = document) => el.querySelector(s);
+const now = () => new Date().toISOString();
+function el(tag, attrs = {}, ...kids) {
+  const n = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null || v === false) continue;
+    if (k === "class") n.className = v;
+    else if (k === "text") n.textContent = v;
+    else if (k.startsWith("on")) n.addEventListener(k.slice(2), v);
+    else n.setAttribute(k, v === true ? "" : v);
+  }
+  for (const c of kids) if (c != null && c !== false) n.append(c);
+  return n;
+}
+
+// ---------- state ----------
+const sortAt = (a, b) => ((a.at || "") < (b.at || "") ? -1 : (a.at || "") > (b.at || "") ? 1 : 0);
+function msgs(id) { return store.messages.filter(m => m.item === id).sort(sortAt); }
+// A cleared answer is not activity: the item simply goes back to Your turn.
+function lastOwnerAt(id) {
+  let t = hasAnswer(id) ? store.responses[id].at || "" : "";
+  for (const m of msgs(id)) if (m.by === "owner" && (m.at || "") > t) t = m.at;
+  return t;
+}
+function lastOwnerMsgAt(id) {
+  let t = "";
+  for (const m of msgs(id)) if (m.by === "owner" && (m.at || "") > t) t = m.at;
+  return t;
+}
+// Claude stamps decisions and follow-ups with `seen`: the owner's latest activity time it had read.
+// Comparing owner activity against `seen` (owner clock vs owner clock) means an answer changed while
+// Claude was working is never hidden, whatever the clocks on the two machines say.
+const seenOf = x => (x ? x.seen || x.at || "" : "");
+function pendingAsk(id) {
+  let ask = null;
+  for (const m of msgs(id)) if (m.by === "claude" && m.asks) ask = m;
+  const o = lastOwnerAt(id);
+  return ask && !(o && o > seenOf(ask)) ? ask : null;
+}
+function hasAnswer(id) {
+  const a = store.responses[id]?.answer;
+  return Array.isArray(a) ? a.length > 0 : a != null && a !== "";
+}
+function stateOf(id) {
+  if (pendingAsk(id)) return "your_turn";
+  const d = store.decisions[id], o = lastOwnerAt(id);
+  if (d && !(o && o > seenOf(d))) return d.parked ? "parked" : "decided";
+  if (hasAnswer(id)) {
+    const r = store.responses[id];
+    // "Decide later" parks the item, unless the owner has commented since; then Claude needs to look.
+    if (r.answer === "later" && !(lastOwnerMsgAt(id) > (r.at || ""))) return "parked";
+    return "with_claude";
+  }
+  return o ? "with_claude" : "your_turn";
+}
+function answerLabel(it, a) {
+  if (a == null) return "";
+  const opt = k => (it.options || []).find(o => o.key === k)?.label || FIXED.find(f => f.k === k)?.l.replace("…", "") || String(k);
+  return Array.isArray(a) ? a.map(opt).join(", ") : opt(a);
+}
+function isChanged(it) { const o = lastOwnerAt(it.id); return !!(it.changedAt && o && it.changedAt > o); }
+function isNewItem(it) { return !!(it.isNew && !lastOwnerAt(it.id)); }
+const writable = () => canWrite && live;
+
+// ---------- writes ----------
+// Each document's writes run one at a time. A transient failure is retried once; a final failure
+// rolls the page back to what is really saved and offers Retry.
+const chains = {}, status = {}, statusTimers = {};
+function write(key, id, fn, { onFail, retry } = {}) {
+  setStatus(id, { text: "Saving…" });
+  const attempt = () => fn().catch(e => (e && e.code === "unavailable"
+    ? new Promise(r => setTimeout(r, 600 + Math.random() * 600)).then(fn)
+    : Promise.reject(e)));
+  const p = (chains[key] || Promise.resolve()).then(attempt);
+  chains[key] = p.catch(() => {});
+  return p.then(
+    () => setStatus(id, { text: "Saved", fade: true }),
+    e => {
+      if (e && e.code === "invalid_argument") { canWrite = false; showBanner("Your access level can't save answers on this board."); }
+      if (onFail) onFail();
+      setStatus(id, { text: "Couldn't save. Check your connection.", err: true, retry: canWrite ? retry : null });
+      renderAll();
+      throw e;
+    });
+}
+function setAnswer(id, answer) {
+  if (!db || !writable()) return;
+  sticky.add(id);
+  const prev = store.responses[id], body = { answer, at: now() };
+  store.responses[id] = body; renderAll();
+  write("r:" + id, id, () => db.doc("responses/" + id).set(body), {
+    onFail: () => { if (store.responses[id] === body) { if (prev) store.responses[id] = prev; else delete store.responses[id]; } },
+    retry: () => setAnswer(id, answer),
+  }).catch(() => {});
+}
+function postMessage(id, text) {
+  if (!db || !writable() || !text.trim()) return Promise.reject(new Error("not writable"));
+  sticky.add(id);
+  const body = { item: id, by: "owner", text: text.trim(), at: now() };
+  return write("m:" + id, id, () => db.collection("messages").add(body));
+}
+function setStatus(id, s) {
+  clearTimeout(statusTimers[id]);
+  status[id] = s;
+  paintStatus(id);
+  if (s.fade) statusTimers[id] = setTimeout(() => { delete status[id]; paintStatus(id); }, 2500);
+}
+function paintStatus(id) {
+  for (const n of document.querySelectorAll(`[data-status="${CSS.escape(id)}"]`)) {
+    const s = status[id]; n.textContent = s ? s.text : ""; n.classList.toggle("err", !!(s && s.err));
+    if (s && s.retry) n.append(" ", el("button", { type: "button", class: "linkbtn", "data-fk": "retry", text: "Retry", onclick: () => s.retry() }));
+  }
+}
+function statusSpan(id) { const n = el("span", { class: "save-status", "data-status": id, "aria-live": "polite" }); queueMicrotask(() => paintStatus(id)); return n; }
+
+// ---------- drafts (kept in this browser only, so a reload or republish doesn't lose them) ----------
+const DKEY = "review-board:drafts:" + (BOARD.key || BOARD.title);
+try { Object.assign(drafts, JSON.parse(localStorage.getItem(DKEY) || "{}")); } catch (_) {}
+function saveDrafts() { try { localStorage.setItem(DKEY, JSON.stringify(drafts)); } catch (_) {} }
+
+// ---------- rendering ----------
+// Editor keys inside text boxes. On macOS, Home/End scroll the page by default; here they move
+// the caret like a typical editor. Keys typed in a text box are not passed to page shortcuts.
+function editorKeys(ta) {
+  ta.addEventListener("keydown", e => {
+    e.stopPropagation();
+    if (e.key !== "Home" && e.key !== "End") return;
+    e.preventDefault();
+    const v = ta.value, whole = e.ctrlKey || e.metaKey, back = ta.selectionDirection === "backward";
+    const caret = back ? ta.selectionStart : ta.selectionEnd, anchor = back ? ta.selectionEnd : ta.selectionStart;
+    let to;
+    if (e.key === "Home") to = whole ? 0 : v.lastIndexOf("\n", caret - 1) + 1;
+    else { const nl = v.indexOf("\n", caret); to = whole || nl === -1 ? v.length : nl; }
+    if (e.shiftKey) ta.setSelectionRange(Math.min(anchor, to), Math.max(anchor, to), to < anchor ? "backward" : "forward");
+    else ta.setSelectionRange(to, to);
+  });
+}
+function composer(id, { prompt, required, then } = {}) {
+  const ta = el("textarea", { id: "c-" + id, rows: "3", "aria-label": prompt || "Comment", placeholder: prompt || "Add a comment or answer a question" });
+  ta.value = drafts[id] || "";
+  const send = el("button", { type: "button", class: "btn primary", "data-fk": "send", text: "Send" });
+  let sending = false;
+  const sync = () => { send.disabled = sending || !writable() || !ta.value.trim(); };
+  ta.addEventListener("input", () => { drafts[id] = ta.value; saveDrafts(); sync(); });
+  ta.addEventListener("keydown", e => { if ((e.metaKey || e.ctrlKey) && e.key === "Enter") { e.preventDefault(); send.click(); } });
+  editorKeys(ta);
+  send.addEventListener("click", async () => {
+    const text = ta.value; if (!text.trim() || sending) return;
+    const typing = document.activeElement === ta;
+    sending = true; sync();
+    try {
+      await postMessage(id, text);
+      drafts[id] = ""; saveDrafts(); composerMode[id] = null;
+      if (then) then();
+      if (id === GENERAL) renderGeneral(true); else rebuild(id, typing ? "#c-" + CSS.escape(id) : null);
+    } catch (_) { sending = false; sync(); } // the draft stays, and the status line offers Retry
+  });
+  sync();
+  ta.disabled = !writable();
+  const row = el("div", { class: "crow" }, send);
+  if (required) row.append(el("button", { type: "button", class: "linkbtn", "data-fk": "cancel", text: "Cancel", onclick: () => { composerMode[id] = null; drafts[id] = ""; saveDrafts(); rebuild(id); } }));
+  row.append(statusSpan(id));
+  return el("div", { class: "composer" }, ta, row);
+}
+
+const quickSent = new Set();
+function thread(id) {
+  const ms = msgs(id); if (!ms.length) return null;
+  const ask = pendingAsk(id);
+  const t = el("div", { class: "thread" });
+  for (const m of ms) {
+    const box = el("div", { class: "msg " + (m.by === "claude" ? "claude" : "owner") },
+      el("span", { class: "who", text: m.by === "claude" ? "Claude" : "You" }), document.createTextNode(String(m.text ?? "")));
+    if (ask && m === ask && Array.isArray(m.quick) && m.quick.length) {
+      const q = el("div", { class: "quick" });
+      // Until the reply comes back in a snapshot, a rebuild would show the ask as pending again,
+      // so remember it was answered here: no double sends.
+      const key = id + "@" + (m.at || "");
+      m.quick.forEach((r, i) => q.append(el("button", {
+        type: "button", class: "btn", "data-fk": "q" + i, text: String(r.label ?? ""), disabled: !writable() || quickSent.has(key),
+        onclick: async () => {
+          if (quickSent.has(key)) return;
+          quickSent.add(key);
+          q.querySelectorAll("button").forEach(b => { b.disabled = true; });
+          try { await postMessage(id, String(r.label)); if (r.answer) setAnswer(id, r.answer); else rebuild(id); }
+          catch (_) { quickSent.delete(key); q.querySelectorAll("button").forEach(b => { b.disabled = !writable(); }); }
+        },
+      })));
+      box.append(q);
+    }
+    t.append(box);
+  }
+  return t;
+}
+
+function answers(it) {
+  const id = it.id, cur = store.responses[id]?.answer;
+  const wrap = el("div", { class: "answers" }, el("span", { class: "label", id: "al-" + id, text: it.multi ? "Pick any that apply" : "Your answer" }));
+  const list = el("div", { class: "ans-list", role: it.multi ? "group" : "radiogroup", "aria-labelledby": "al-" + id });
+  // Every choice saves immediately. Clicking the selected choice again, or "Clear answer", undoes it.
+  const pick = (k, needsText) => {
+    const next = cur === k ? null : k;
+    setAnswer(id, next);
+    if (next && needsText) setTimeout(() => $("#c-" + CSS.escape(id))?.focus(), 0);
+  };
+  const btn = (key, label, checked, extraClass, rec, onclick) => {
+    const b = el("button", { type: "button", class: "ans" + extraClass, "data-fk": "ans:" + key, role: it.multi && extraClass.includes("multi") ? "checkbox" : "radio", "aria-checked": String(checked), disabled: !writable() },
+      el("span", { class: "box", "aria-hidden": "true" }), el("span", { text: label }), rec ? el("span", { class: "rectag", text: "Recommended" }) : null);
+    b.addEventListener("click", onclick);
+    return b;
+  };
+  if (it.options && it.options.length) {
+    const opts = [...it.options].sort((a, b) => (b.recommended ? 1 : 0) - (a.recommended ? 1 : 0));
+    for (const o of opts) {
+      const checked = it.multi ? Array.isArray(cur) && cur.includes(o.key) : cur === o.key;
+      list.append(btn(o.key, o.label, checked, it.multi ? " multi" : "", o.recommended, () => {
+        if (it.multi) {
+          const set = new Set(Array.isArray(cur) ? cur : []);
+          set.has(o.key) ? set.delete(o.key) : set.add(o.key);
+          setAnswer(id, [...set]);
+        } else pick(o.key);
+      }));
+    }
+    for (const f of FIXED.filter(f => f.k !== "accept")) list.append(btn(f.k, f.l, cur === f.k, " aside", false, () => pick(f.k, f.needsText)));
+  } else {
+    for (const f of FIXED) list.append(btn(f.k, f.l, cur === f.k, "", f.k === "accept", () => pick(f.k, f.needsText)));
+  }
+  // Arrow keys move between choices, as in any radio group.
+  list.addEventListener("keydown", e => {
+    const keys = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+    if (!(e.key in keys)) return;
+    const bs = [...list.querySelectorAll(".ans")], i = bs.indexOf(document.activeElement);
+    if (i < 0) return;
+    e.preventDefault(); bs[(i + keys[e.key] + bs.length) % bs.length].focus();
+  });
+  wrap.append(list);
+  const foot = el("div", { class: "ans-foot" });
+  if (hasAnswer(id) && writable()) foot.append(el("button", { type: "button", class: "linkbtn", "data-fk": "clear", text: "Clear answer", onclick: () => setAnswer(id, null) }));
+  foot.append(statusSpan(id));
+  wrap.append(foot);
+  return wrap;
+}
+
+function buildCard(it) {
+  const id = it.id, st = stateOf(id), d = store.decisions[id], ask = pendingAsk(id);
+  const open = expanded.has(id);
+  const art = el("article", { class: "item", id: "item-" + id, "aria-labelledby": "t-" + id, "data-state": st });
+  const chips = el("div", { class: "chips" });
+  if (st === "your_turn") {
+    if (it.severity === "blocker") chips.append(el("span", { class: "chip blocker", text: SEV.blocker }));
+    if (isNewItem(it)) chips.append(el("span", { class: "chip mark", text: "New" }));
+    else if (isChanged(it)) chips.append(el("span", { class: "chip mark", text: "Changed" }));
+  }
+  chips.append(el("span", { class: "chip " + st, text: SLABEL[st] }));
+  let sum, sumClass = "rsum";
+  if (ask) { sum = "Claude asks: " + ask.text; sumClass += " ask"; }
+  else if (d && (st === "decided" || st === "parked")) { sum = d.text; sumClass += " decision"; }
+  else if (hasAnswer(id)) sum = "Your answer: " + answerLabel(it, store.responses[id].answer);
+  else sum = it.rec;
+  // The row's accessible name is the title only; the summary is its description.
+  const row = el("button", { type: "button", class: "row", "aria-expanded": String(open), "aria-controls": "b-" + id, "aria-labelledby": "t-" + id, "aria-describedby": open ? null : "s-" + id },
+    el("span", { class: "iid", "aria-hidden": "true", text: id }), el("span", { class: "rtitle", id: "t-" + id, text: it.title }), chips,
+    open ? null : el("span", { class: sumClass, id: "s-" + id, text: sum }));
+  row.addEventListener("click", () => { open ? expanded.delete(id) : expanded.add(id); sticky.add(id); rebuild(id, "#item-" + CSS.escape(id) + " .row"); });
+  art.append(row);
+  if (!open) return art;
+
+  const body = el("div", { class: "body", id: "b-" + id });
+  const reopening = composerMode[id] === "reopen";
+  const settled = st === "decided" || st === "parked";
+  if (d) {
+    // Once the owner has said something after the decision, it is only the previous decision.
+    const label = settled ? (d.parked ? "Parked" : "Decision") : "Previous decision";
+    const box = el("div", { class: "decision-box" + (settled ? "" : " old") }, el("span", { class: "label", text: label }), el("span", { class: "dtext", text: d.text }));
+    if (settled && !reopening && writable()) box.append(el("button", { type: "button", class: "linkbtn", "data-fk": "reopen", text: "Reopen", onclick: () => { composerMode[id] = "reopen"; rebuild(id, "#c-" + CSS.escape(id)); } }));
+    body.append(box);
+  }
+  if (it.issue) body.append(el("p", { class: "issue", text: it.issue }));
+  if (it.rec) body.append(el("div", { class: "rec" }, el("span", { class: "label", text: "Recommendation" }), el("p", { text: it.rec })));
+  const r = store.responses[id], a = r?.answer;
+  // "Something else" and "I have a question" save at once, but Claude needs the comment to act on them.
+  const wants = (a === "change" || a === "discuss") && !msgs(id).some(m => m.by === "owner" && (m.at || "") >= (r.at || ""));
+  const prompts = { change: "What would you like instead?", discuss: "What's your question or concern?" };
+  const notes = { change: "Saved. Now say what you'd like instead, so Claude can act on it.", discuss: "Saved. Now add your question, so Claude can answer it." };
+  const box = () => composer(id, reopening ? { prompt: "What should be reconsidered?", required: true } : { prompt: wants ? prompts[a] : null });
+  const locked = d && settled && !reopening; // a settled item takes new input only after Reopen
+  if (!locked || st === "parked") body.append(answers(it));
+  if (wants && !reopening) body.append(el("div", { class: "prompt-note", role: "status", text: notes[a] }), box());
+  const th = thread(id); if (th) body.append(th);
+  if (!locked && (!wants || reopening)) body.append(box());
+  const meta = el("div", { class: "meta" });
+  if (it.changed && (isChanged(it) || isNewItem(it))) meta.append(el("span", { text: it.changed }));
+  if (it.ref) meta.append(el("span", { text: "Reference: " + it.ref }));
+  if (meta.childNodes.length) body.append(meta);
+  art.append(body);
+  return art;
+}
+
+function sig(it) {
+  const id = it.id;
+  return JSON.stringify([stateOf(id), store.responses[id], store.decisions[id], msgs(id).map(m => [m.at, m.by, m.text, m.asks]), expanded.has(id), composerMode[id], writable()]);
+}
+// Rebuild one card. Focus returns to the same control in the new card (or the given selector),
+// so keyboard and screen-reader users keep their place.
+function rebuild(id, focusSel) {
+  const it = byId[id], old = document.getElementById("item-" + id);
+  if (!it || !old) return;
+  const ae = document.activeElement, had = old.contains(ae);
+  const key = focusSel || (had ? (ae.id ? "#" + CSS.escape(ae.id) : ae.dataset?.fk ? `[data-fk="${CSS.escape(ae.dataset.fk)}"]` : null) : null);
+  const fresh = buildCard(it); sigs[id] = sig(it);
+  old.replaceWith(fresh);
+  if (had || focusSel) {
+    const target = (key && document.querySelector(key)) || fresh.querySelector('.ans[aria-checked="true"]') || fresh.querySelector(".row");
+    target?.focus({ preventScroll: true });
+  }
+  applyFilter(); updateCounts();
+}
+function renderAll() {
+  if (!ready) return;
+  for (const it of ITEMS) {
+    const s = sig(it), node = document.getElementById("item-" + it.id);
+    if (s === sigs[it.id] || !node) continue;
+    // Don't repaint under someone typing; a box with nothing unsent is safe to rebuild.
+    const ae = document.activeElement;
+    if (node.contains(ae) && ae.tagName === "TEXTAREA" && ae.value.trim()) continue;
+    rebuild(it.id);
+  }
+  renderGeneral(); applyFilter(); updateCounts(); renderSince();
+}
+
+function counts() {
+  const c = { your_turn: 0, with_claude: 0, decided: 0, parked: 0 };
+  for (const it of ITEMS) c[stateOf(it.id)]++;
+  return c;
+}
+function updateCounts() {
+  const c = counts(), total = ITEMS.length, fresh = !Object.keys(store.responses).length && !store.messages.length;
+  const tabsEl = $("#tabs"); tabsEl.textContent = "";
+  const line = $("#status-line"); line.textContent = "";
+  if (!live) {
+    // Until the answers have loaded, show nothing that could be mistaken for the real state.
+    line.textContent = connState === "offline" ? "Answers can't be loaded in this view." : "Loading your answers…";
+    tabsEl.append(el("button", { type: "button", class: "tab", "aria-pressed": "true" }, document.createTextNode("All"), el("span", { class: "n", text: String(total) })));
+    $("#meter").textContent = "";
+    for (const g of GROUPS) { const gs = document.querySelector(`#group-${CSS.escape(g.key)} .gsum`); if (gs) gs.textContent = ""; }
+    return;
+  }
+  if (tab === null) tab = c.your_turn > 0 ? "your_turn" : "all";
+  for (const s of STATES) {
+    if (s.k !== "your_turn" && c[s.k] === 0 && tab !== s.k) continue;
+    tabsEl.append(el("button", { type: "button", class: "tab", "aria-pressed": String(tab === s.k), onclick: () => setTab(s.k) },
+      el("span", { class: "dot " + s.k, "aria-hidden": "true" }), document.createTextNode(s.l), el("span", { class: "n", text: String(c[s.k]) })));
+  }
+  tabsEl.append(el("button", { type: "button", class: "tab", "aria-pressed": String(tab === "all"), onclick: () => setTab("all") }, document.createTextNode("All"), el("span", { class: "n", text: String(total) })));
+  const meter = $("#meter"); meter.textContent = "";
+  for (const s of STATES) meter.append(el("span", { class: s.k, style: `width:${(c[s.k] / total) * 100}%` }));
+  requestAnimationFrame(markTabOverflow);
+  if (fresh) {
+    const blockers = ITEMS.filter(i => i.severity === "blocker").length;
+    line.append(document.createTextNode(`${total} items` + (blockers ? ` · ${blockers} blockers` : "") + (GROUPS[0] ? ` · Start with ${GROUPS[0].key}. ${GROUPS[0].title}` : "")));
+  } else {
+    if (BOARD.round) line.append(document.createTextNode(BOARD.round + " · "));
+    if (c.your_turn) line.append(el("b", { text: `${c.your_turn} ${c.your_turn === 1 ? "item needs" : "items need"} you` }));
+    else line.append(document.createTextNode(c.with_claude ? "Nothing needs you right now. Claude is working through your answers." : c.parked ? "Everything is decided or parked." : "Everything is decided."));
+  }
+  for (const g of GROUPS) {
+    const its = ITEMS.filter(i => i.group === g.key), turn = its.filter(i => stateOf(i.id) === "your_turn").length;
+    const done = its.filter(i => ["decided", "parked"].includes(stateOf(i.id))).length;
+    const gs = document.querySelector(`#group-${CSS.escape(g.key)} .gsum`);
+    if (gs) gs.textContent = (turn ? `${turn} need you · ` : "") + `${done}/${its.length} decided`;
+    const ta = document.querySelector(`.toc a[data-g="${CSS.escape(g.key)}"] .tc`);
+    if (ta) ta.textContent = turn ? String(turn) : "";
+  }
+}
+function markTabOverflow() {
+  const t = $("#tabs");
+  t.classList.toggle("more", t.scrollLeft + t.clientWidth < t.scrollWidth - 2);
+}
+function setTab(k) {
+  if (!live) return;
+  tab = k; userPickedTab = true; sticky.clear(); updateCounts(); applyFilter();
+  const n = ITEMS.filter(i => k === "all" || stateOf(i.id) === k).length;
+  $("#announce").textContent = `Showing ${n} items`;
+}
+function applyFilter() {
+  let shown = 0;
+  for (const it of ITEMS) {
+    const node = document.getElementById("item-" + it.id); if (!node) continue;
+    const ok = tab === "all" || tab === null || stateOf(it.id) === tab || sticky.has(it.id);
+    node.hidden = !ok; if (ok) shown++;
+  }
+  for (const g of GROUPS) {
+    const sec = document.getElementById("group-" + g.key); if (!sec) continue;
+    const any = [...sec.querySelectorAll(".item")].some(n => !n.hidden);
+    sec.hidden = !any;
+    const isOpen = isSectionOpen(g.key);
+    sec.querySelector(".group-items").hidden = !isOpen;
+    sec.querySelector(".group-head").setAttribute("aria-expanded", String(isOpen));
+    const gb = sec.querySelector(".group-blurb"); if (gb) gb.hidden = !isOpen;
+  }
+  $("#empty").hidden = shown > 0;
+  $("#empty").textContent = tab === "your_turn" ? "Nothing needs you right now." : "No items here.";
+}
+
+function generalUnread() {
+  const after = [prevVisit, lastOwnerAt(GENERAL)].sort().pop() || "";
+  return msgs(GENERAL).filter(m => m.by === "claude" && (m.at || "") > after).length;
+}
+function renderGeneral(force) {
+  const n = generalUnread(), tg = $("#general-toggle");
+  tg.textContent = "Anything else?" + (n ? ` · ${n} new from Claude` : "");
+  const box = $("#general"); if (box.hidden) return;
+  const ae = document.activeElement;
+  if (!force && box.contains(ae) && ae.tagName === "TEXTAREA" && ae.value.trim()) return;
+  const refocus = box.contains(ae) && ae.tagName === "TEXTAREA";
+  box.textContent = "";
+  box.append(el("span", { class: "label", text: "Anything else" }), el("p", { class: "small", text: "Points not covered by any item, or general direction for the next revision." }));
+  const th = thread(GENERAL); if (th) box.append(th);
+  box.append(composer(GENERAL, { prompt: "Write anything that doesn't belong to one item" }));
+  if (refocus) $("#c-" + GENERAL)?.focus({ preventScroll: true });
+}
+
+let sinceAll = false;
+function renderSince() {
+  const wrap = $("#since"), list = $("#since-list");
+  if (!prevVisit) { wrap.hidden = true; return; }
+  const hits = [];
+  for (const it of ITEMS) {
+    const reasons = [];
+    if (msgs(it.id).some(m => m.by === "claude" && (m.at || "") > prevVisit)) reasons.push(pendingAsk(it.id) ? "Claude asks" : "Claude replied");
+    const d = store.decisions[it.id]; if (d && (d.at || "") > prevVisit) reasons.push(d.parked ? "Parked" : "Decided");
+    if (it.changedAt && it.changedAt > prevVisit) reasons.push(it.isNew ? "New" : "Changed");
+    if (reasons.length) hits.push([it, reasons]);
+  }
+  if (msgs(GENERAL).some(m => m.by === "claude" && (m.at || "") > prevVisit)) hits.unshift([{ id: GENERAL, label: "Anything else" }, [pendingAsk(GENERAL) ? "Claude asks" : "Claude replied"]]);
+  list.textContent = "";
+  const LIMIT = 6, shown = sinceAll ? hits : hits.slice(0, LIMIT);
+  for (const [it, r] of shown) list.append(el("li", {}, el("button", { type: "button", text: `${it.label || it.id} · ${r.join(", ")}`, onclick: () => jump(it.id) })));
+  if (hits.length > shown.length) list.append(el("li", {}, el("button", { type: "button", class: "more", text: `and ${hits.length - shown.length} more`, onclick: () => { sinceAll = true; renderSince(); } })));
+  wrap.hidden = hits.length === 0;
+}
+function jump(id) {
+  if (id === GENERAL) { const g = $("#general"); g.hidden = false; $("#general-toggle").setAttribute("aria-expanded", "true"); renderGeneral(true); g.scrollIntoView({ block: "start" }); $("#c-" + GENERAL)?.focus({ preventScroll: true }); return; }
+  const it = byId[id]; if (!it) return;
+  if (tab !== "all" && stateOf(id) !== tab) setTab("all");
+  setSectionOpen(it.group, true); applyFilter(); expanded.add(id); rebuild(id);
+  const n = document.getElementById("item-" + id); n?.scrollIntoView({ block: "start" }); n?.querySelector(".row")?.focus({ preventScroll: true });
+}
+
+function showBanner(msg) { const b = $("#banner"); b.textContent = msg; b.hidden = false; }
+
+// ---------- build static frame ----------
+$("#board-title").textContent = BOARD.title;
+if (BOARD.subtitle) { $("#board-subtitle").textContent = BOARD.subtitle; $("#board-subtitle").hidden = false; }
+const howText = BOARD.how || "Each item is a question with Claude's recommendation. Pick an answer: it saves straight away, and tapping it again (or Clear answer) undoes it. Choose Something else… for a different decision, or I have a question… if you're not ready to decide, then add a comment so Claude can act on it. Decide later parks an item. Claude reads your answers, replies in each item's thread and records decisions. Your turn lists everything waiting for you, including Claude's follow-up questions. Tell Claude in chat when you've finished a pass.";
+$("#how-body").textContent = howText;
+$("#general-toggle").addEventListener("click", e => {
+  const g = $("#general"); g.hidden = !g.hidden; e.currentTarget.setAttribute("aria-expanded", String(!g.hidden)); renderGeneral();
+});
+$("#since-dismiss").addEventListener("click", () => { $("#since").hidden = true; prevVisit = ""; });
+
+const list = $("#list"), toc = $("#toc"), sel = $("#section-select");
+sel.append(el("option", { value: "", text: "Sections" }));
+for (const g of GROUPS) {
+  const items = el("div", { class: "group-items" });
+  const head = el("button", { type: "button", class: "group-head", "aria-expanded": "true", "aria-controls": "gi-" + g.key },
+    el("span", { class: "chev", "aria-hidden": "true", text: "▾" }), el("span", { class: "gk", text: g.key }), el("span", { class: "gt", text: g.title }), el("span", { class: "gsum" }));
+  items.id = "gi-" + g.key;
+  head.addEventListener("click", () => { setSectionOpen(g.key, !isSectionOpen(g.key)); applyFilter(); });
+  const sec = el("section", { class: "group", id: "group-" + g.key, "aria-labelledby": "gh-" + g.key }, el("h2", { class: "gh", id: "gh-" + g.key }, head), g.blurb ? el("p", { class: "group-blurb", text: g.blurb }) : null, items);
+  for (const it of ITEMS.filter(i => i.group === g.key)) { const c = buildCard(it); sigs[it.id] = sig(it); items.append(c); }
+  list.append(sec);
+  toc.append(el("a", { href: "#group-" + g.key, "data-g": g.key, onclick: e => { e.preventDefault(); setSectionOpen(g.key, true); applyFilter(); sec.scrollIntoView({ block: "start" }); } }, el("span", { text: `${g.key}. ${g.title}` }), el("span", { class: "tc" })));
+  sel.append(el("option", { value: g.key, text: `${g.key}. ${g.title}` }));
+}
+sel.addEventListener("change", () => { const k = sel.value; if (!k) return; setSectionOpen(k, true); applyFilter(); document.getElementById("group-" + k)?.scrollIntoView({ block: "start" }); sel.value = ""; });
+list.append(el("p", { class: "empty", id: "empty", hidden: true }));
+new ResizeObserver(() => document.documentElement.style.setProperty("--bar-h", $("#bar").offsetHeight + "px")).observe($("#bar"));
+$("#tabs").addEventListener("scroll", markTabOverflow, { passive: true });
+window.addEventListener("resize", markTabOverflow);
+ready = true;
+updateCounts(); applyFilter();
+
+// Which sections were finished when the page loaded (decides the All tab's default collapsed sections).
+function collapseFinishedSections() {
+  for (const g of GROUPS) {
+    const its = ITEMS.filter(i => i.group === g.key);
+    finishedAtLoad[g.key] = its.every(i => ["decided", "parked"].includes(stateOf(i.id)));
+  }
+}
+function saveVisit() { try { localStorage.setItem(LSKEY, now()); } catch (_) {} }
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "hidden") saveVisit(); });
+window.addEventListener("pagehide", saveVisit);
+
+// ---------- connect ----------
+(async () => {
+  try { db = await (window.claude?.use ? window.claude.use("db") : Promise.resolve(null)); } catch (_) { db = null; }
+  if (!db) {
+    canWrite = false; connState = "offline";
+    $("#conn").textContent = "Not connected"; $("#conn").hidden = false;
+    showBanner("Answers can't be loaded or saved in this view. Open this page on claude.ai while signed in.");
+    renderAll(); return;
+  }
+  try {
+    const user = await window.claude.use("user");
+    if (user && (await user.can("data.write")) === false) { canWrite = false; showBanner("You can read this review, but your access level can't save answers."); }
+  } catch (_) {}
+  let got = { responses: false, decisions: false, messages: false }, collapsed = false;
+  const onReady = () => {
+    if (!collapsed && got.responses && got.decisions && got.messages) {
+      collapsed = true; live = true; connState = "live"; collapseFinishedSections();
+      if (!userPickedTab) tab = null;
+    }
+    renderAll();
+  };
+  const fail = () => { $("#conn").textContent = "Connection lost. Reload to reconnect."; $("#conn").hidden = false; };
+  db.collection("responses").onSnapshot(s => { store.responses = {}; s.docs.forEach(d => { store.responses[d.id] = { ...d.data() }; }); got.responses = true; onReady(); }, fail);
+  db.collection("decisions").onSnapshot(s => { store.decisions = {}; s.docs.forEach(d => { store.decisions[d.id] = { ...d.data() }; }); got.decisions = true; onReady(); }, fail);
+  db.collection("messages").onSnapshot(s => { store.messages = s.docs.map(d => ({ id: d.id, ...d.data() })); got.messages = true; onReady(); }, fail);
+})();
+})();
+</script>
