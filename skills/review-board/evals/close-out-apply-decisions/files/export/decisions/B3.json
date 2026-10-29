@@ -1,0 +1,9 @@
+{
+  "id": "B3",
+  "data": {
+    "text": "No automatic payment retries of any kind; email the customer instead.",
+    "at": "2026-10-28T08:22:00.000Z"
+  },
+  "version": 1,
+  "updatedAt": "2026-10-28T08:22:00Z"
+}

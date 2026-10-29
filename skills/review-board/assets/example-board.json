@@ -1,0 +1,110 @@
+{
+  "title": "Checkout Spec Review",
+  "subtitle": "Review of docs/checkout_spec.md, revision 1.",
+  "round": "Round 1",
+  "groups": [
+    {
+      "key": "A",
+      "title": "Foundations",
+      "blurb": "Decide these first. Later items depend on them."
+    },
+    {
+      "key": "B",
+      "title": "Payments",
+      "blurb": "How money moves and what happens when it fails."
+    },
+    {
+      "key": "C",
+      "title": "Wording",
+      "blurb": "Terms and copy the spec uses inconsistently."
+    }
+  ],
+  "items": [
+    {
+      "id": "A1",
+      "group": "A",
+      "severity": "blocker",
+      "title": "Guest checkout or accounts only?",
+      "issue": "The spec says both \"no sign-up required\" and \"orders are saved to the customer's account\".",
+      "rec": "Allow guest checkout, and offer to create an account after payment.",
+      "ref": "Spec §2, §5",
+      "options": [
+        {
+          "key": "guest",
+          "label": "Guest checkout, account offered after",
+          "recommended": true
+        },
+        {
+          "key": "accounts",
+          "label": "Accounts required"
+        }
+      ]
+    },
+    {
+      "id": "A2",
+      "group": "A",
+      "severity": "blocker",
+      "title": "Which launch markets?",
+      "issue": "Tax, currency and payment methods all depend on the countries served, and the spec names none.",
+      "rec": "Name the launch countries, then revisit sections B and C.",
+      "multi": true,
+      "options": [
+        {
+          "key": "sg",
+          "label": "Singapore"
+        },
+        {
+          "key": "my",
+          "label": "Malaysia"
+        },
+        {
+          "key": "au",
+          "label": "Australia"
+        }
+      ]
+    },
+    {
+      "id": "A3",
+      "group": "A",
+      "severity": "important",
+      "title": "Add measurable success criteria",
+      "issue": "\"Checkout should feel fast\" can't be tested.",
+      "rec": "Target: p95 time from Pay to confirmation under 3 seconds, and at most 3 screens."
+    },
+    {
+      "id": "B1",
+      "group": "B",
+      "severity": "blocker",
+      "title": "What happens when a payment times out?",
+      "issue": "The customer may be charged without seeing a confirmation, then pay again.",
+      "rec": "Show \"checking your payment\" and poll for up to 60 seconds before offering a retry. Never charge twice for one order."
+    },
+    {
+      "id": "B2",
+      "group": "B",
+      "severity": "important",
+      "title": "Local payment methods",
+      "issue": "Cards alone cover a minority of payments in some launch markets.",
+      "rec": "Support the most-used local method in each launch market from day one.",
+      "options": [
+        {
+          "key": "local",
+          "label": "Local methods at launch",
+          "recommended": true
+        },
+        {
+          "key": "cardsfirst",
+          "label": "Cards first, local methods later"
+        }
+      ]
+    },
+    {
+      "id": "C1",
+      "group": "C",
+      "severity": "detail",
+      "title": "\"Order\" and \"purchase\" are used interchangeably",
+      "issue": "Support staff and the API docs will copy whichever word they see.",
+      "rec": "Use \"order\" everywhere. Keep \"purchase\" only for the button label."
+    }
+  ]
+}

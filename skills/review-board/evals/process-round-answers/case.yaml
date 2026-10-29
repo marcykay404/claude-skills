@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: process-round-answers
+expected_outcome: |
+  Answers are read from the database export and summarized with round_report.py. Clear answers get decisions (A1 accounts required, A3, B2 PayNow and FPX only); A1's non-recommended choice is accepted as a decision, not argued with. C1 is parked. B1's question is answered in the thread. B3's ambiguous "same as the old system" gets a follow-up with asks true and quick-reply options instead of a guess. A2 records Singapore and Malaysia and treats the Australia aside sensibly. The A1 answer ripples into C2 (guest wording), which is rewritten with changed and changedAt or given a follow-up. The general note about refunds produces a new group of items with new IDs at the end. All writes go in one batch, touch only decisions and Claude messages (never responses or owner messages), use ISO timestamps and c-<item>-<time> document ids, and the board is rebuilt with the script. The chat reply is short.
+context:
+  scaffold_script: place-files.sh

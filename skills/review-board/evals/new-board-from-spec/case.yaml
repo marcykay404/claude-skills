@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: new-board-from-spec
+expected_outcome: |
+  A review board is set up instead of a long list of questions in chat. board.json holds 15 or more items that pass build_board.py validation, with a Foundations-style group of dependency-setting decisions first, blockers marked, a concrete recommendation on every item, options only for real trade-offs with at most one recommended, and stable IDs. The page is built with the bundled script rather than hand-written HTML, publish settings declare the db and user capabilities, and the chat reply is short and says where to start.
+context:
+  scaffold_script: place-files.sh

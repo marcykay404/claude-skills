@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: close-out-apply-decisions
+expected_outcome: |
+  The run reads all decisions together before closing. It notices that B1 (retry the charge automatically once) and B3 (no automatic retries of any kind) contradict each other, does not resolve this itself, posts an asks follow-up with quick replies on the board, and tells the user. It applies every other decision to checkout_spec.md (accounts required, Singapore and Malaysia, the 3-second target, cards plus PayNow and FPX, 'View your order') with no leftover contradictions, leaves the retry behaviour marked open, and writes a decision log keyed by item ID with C1 parked. It never writes to responses or owner messages.
+context:
+  scaffold_script: place-files.sh

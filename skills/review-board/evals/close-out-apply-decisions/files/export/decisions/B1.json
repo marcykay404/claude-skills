@@ -1,0 +1,9 @@
+{
+  "id": "B1",
+  "data": {
+    "text": "If the provider doesn't answer, show 'checking your payment' for up to 30 seconds on mobile and 60 on desktop, then retry the charge automatically once. Never charge twice.",
+    "at": "2026-10-28T08:21:00.000Z"
+  },
+  "version": 1,
+  "updatedAt": "2026-10-28T08:21:00Z"
+}
