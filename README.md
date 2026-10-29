@@ -44,18 +44,18 @@ Claude turns its questions into a board of items, each with a recommendation. Yo
 
 ## Installing a skill in Claude Code
 
-Claude Code (the CLI, and the Code tab of the desktop app) loads any skill folder placed in a skills directory. No packaging is needed.
+Claude Code (the CLI, and the Code tab of the desktop app) loads any skill folder placed in a skills directory. No packaging is needed. Link the folder from your clone, so a `git pull` is all an update takes:
 
 ```bash
 git clone https://github.com/marcykay404/claude-skills.git
 mkdir -p ~/.claude/skills
-cp -R claude-skills/skills/review-board ~/.claude/skills/
+ln -s "$PWD/claude-skills/skills/review-board" ~/.claude/skills/review-board
 ```
 
 - `~/.claude/skills/` makes the skill available in every project.
-- `<project>/.claude/skills/` makes it available in one project, and can be committed with that project.
+- `<project>/.claude/skills/` makes it available in one project. A link there points to a path on your machine, so don't commit it; copy the folder instead if the project's other users need the skill.
 
-To update, pull the repository and copy the folder again. Claude applies a skill when your request matches its description, or you can ask for it by name (`/review-board`).
+Claude applies a skill when your request matches its description, or you can ask for it by name (`/review-board`).
 
 ## Layout
 
