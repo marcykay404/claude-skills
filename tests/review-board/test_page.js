@@ -129,6 +129,18 @@ test('row accessible name is the title; the summary is its description', async (
   await close(p);
 });
 
+test('every row shows a chevron that turns when the row opens', async () => {
+  const p = await open();
+  const chev = () => p.$eval('#item-X1 .row .chev', n => { const r = n.getBoundingClientRect(); return { w: r.width, turn: getComputedStyle(n).transform }; });
+  assert.strictEqual(await p.$$eval('.row', ns => ns.every(n => n.querySelector('.chev'))), true);
+  const closed = await chev();
+  assert.ok(closed.w > 0, 'visible');
+  await p.click('#item-X1 .row');
+  await p.waitForTimeout(300);
+  assert.notStrictEqual((await chev()).turn, closed.turn);
+  await close(p);
+});
+
 // ---- saving: failures, retries, sending ----
 test('a transient failure is retried once and succeeds', async () => {
   const p = await open({ failSet: 1 });
